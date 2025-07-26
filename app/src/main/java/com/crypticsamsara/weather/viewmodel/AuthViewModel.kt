@@ -2,6 +2,7 @@ package com.crypticsamsara.weather.viewmodel
 
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.crypticsamsara.weather.api.AuthApiService
@@ -24,20 +25,7 @@ import javax.inject.Inject
     class AuthViewModel @Inject constructor
     (private val api: AuthApiService,
             private val prefs: SharedPreferences) : ViewModel() {
-    /*
-    init {
-        _authToken.value = prefs.getString("auth_token", null)
-        if (_authToken.value != null) {
-            fetchUserProfile()  // Auto-fetch on init if token exists
-        }
-    }
 
-    // In handleAuthResponse, after setting _authToken:
-    prefs.edit().putString("auth_token", _authToken.value).apply()
-
-
-
- */
     // Holds the authentication token
     private val _authToken = MutableStateFlow<String?>(null)
     val authToken: StateFlow<String?> = _authToken.asStateFlow()
@@ -64,6 +52,7 @@ import javax.inject.Inject
     private val _supportedLanguages = MutableStateFlow(NigerianLanguage.allLanguages)
     val supportedLanguages: StateFlow<List<NigerianLanguage>> = _supportedLanguages.asStateFlow()
 
+    // InCase of Crash
     init {
         _authToken.value = prefs.getString("auth_token", null)
         if (_authToken.value != null) {
@@ -71,6 +60,22 @@ import javax.inject.Inject
             fetchUserProfile()
         }
     }
+
+    // To clear stored token on ViewModel creation to prevent auto-login
+    init {
+        prefs.edit { remove("auth_token") }
+    }
+
+    // To ensure token is cleared when viewModel is destroyed
+    override fun onCleared() {
+        super.onCleared()
+        prefs.edit { remove("auth_token") }
+        //  prefs.edit().remove("auth_token").apply()
+        _authToken.value = null
+        _currentUser.value =null
+    }
+
+
 
     // Nigerian languages enum with codes and display names
 
@@ -151,20 +156,6 @@ import javax.inject.Inject
                 val response = api.registerUser(
                     RegistrationRequest(firstName, lastName, email, phoneNumber, password, state)
                 )
-                /*
-                if (response.isSuccessful) {
-                    _registerState.value = AuthState.Success("Registration successful")
-                } else {
-                    _registerState.value = AuthState.Error(
-                        response.errorBody()?.string() ?: "Registration failed"
-                    )
-                }
-            } catch (e: Exception) {
-                _registerState.value = AuthState.Error(e.localizedMessage ?: "Unknown error")
-            }
-        }
-    }
-                */
                 handleAuthResponse(response, _registerState)
             } catch (e: Exception) {
                 Log.e("AuthVM", "Register error: ${e.message}", e)
@@ -187,21 +178,6 @@ import javax.inject.Inject
                 val response = api.loginUser(
                     LoginRequest(email, phoneNumber, password)
                 )
-                /*
-                if (response.isSuccessful) {
-                    _loginState.value = AuthState.Success("Login successful")
-                } else {
-                    _loginState.value = AuthState.Error(
-                        response.errorBody()?.string() ?: "Login failed"
-                    )
-                }
-            } catch (e: Exception) {
-                _loginState.value = AuthState.Error(e.localizedMessage ?: "Unknown error")
-            }
-        }
-    }
-
-                 */
                 handleAuthResponse(response, _loginState)
             } catch (e: Exception) {
                 Log.e("AuthVM", "Login error: ${e.message}", e)
@@ -269,45 +245,16 @@ import javax.inject.Inject
         }
     }
 
-    /*
     private fun handleAuthResponse(response: Response<*>, stateFlow: MutableStateFlow<AuthState>) {
         if (response.isSuccessful) {
-            when (val body = response.body()) {
-                is LoginResponse -> {
-                    body.data?.token?.let { _authToken.value = it }
-                    stateFlow.value =
-                        AuthState.Success(getLocalizedErrorMessage("Login successful"))
-                    fetchUserProfile()
-                }
 
-                is RegistrationResponse -> {
-                    body.data?.token?.let { _authToken.value = it }
-                    stateFlow.value =
-                        AuthState.Success(getLocalizedErrorMessage("Registration successful"))
-                    fetchUserProfile()
-                }
-
-                else -> stateFlow.value =
-                    AuthState.Error(getLocalizedErrorMessage("Unexpected response"))
-            }
-        } else {
-            stateFlow.value = AuthState.Error(
-                getLocalizedErrorMessage(
-                    response.errorBody()?.string() ?: "Request failed"
-                )
-            )
-        }
-    }
-
- */
-
-    private fun handleAuthResponse(response: Response<*>, stateFlow: MutableStateFlow<AuthState>) {
-        if (response.isSuccessful) {
             when (val body = response.body()) {
                 is LoginResponse -> {
                     body.data?.token?.let {
                         _authToken.value = it
-                        prefs.edit().putString("auth_token", it).apply()
+                        prefs.edit { putString("auth_token", it) }
+                        // InCase of error replace the above with this
+                        // prefs.edit().putString("auth_token", it).apply()
                         Log.d("AuthVM", "Login successful, token saved: $it")
                     }
                     stateFlow.value =
@@ -318,7 +265,9 @@ import javax.inject.Inject
                 is RegistrationResponse -> {
                     body.data?.token?.let {
                         _authToken.value = it
-                        prefs.edit().putString("auth_token", it).apply()
+                        prefs.edit { putString("auth_token", it) }
+                        // InCase of error replace the above with this
+                        // prefs.edit().putString("auth_token", it).apply()
                         Log.d("AuthVM", "Registration successful, token saved: $it")
                     }
                     stateFlow.value =
@@ -337,27 +286,9 @@ import javax.inject.Inject
             Log.e("AuthVM", "API error: $error")
             stateFlow.value = AuthState.Error(getLocalizedErrorMessage(error))
         }
+
     }
 
-
-    /*
-
-private fun fetchUserProfile() {
-    viewModelScope.launch {
-        _authToken.value?.let { token ->
-            try {
-                val response = api.getCurrentUser("Bearer $token")
-                if (response.isSuccessful) {
-                    _currentUser.value = response.body()?.data
-                }
-            } catch (e: Exception) {
-                // Handle error
-            }
-        }
-    }
-}
-
- */
 
     private fun fetchUserProfile() {
         _authToken.value?.let { token ->
@@ -378,13 +309,17 @@ private fun fetchUserProfile() {
     }
 
 
+
+
+
     fun logout() {
         _authToken.value = null
         _currentUser.value = null
         _loginState.value = AuthState.Idle
         _registerState.value = AuthState.Idle
         _language.value = NigerianLanguage.ENGLISH
-        prefs.edit().remove("auth_token").apply()
+        //  prefs.edit().remove("auth_token").apply()
+        prefs.edit { remove("auth_token") }
         Log.d("AuthVM", "Logged out, token cleared")
     }
 

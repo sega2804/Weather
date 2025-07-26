@@ -16,8 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WeatherViewModel @Inject constructor(
-    private val api: AuthApiService,
-  //  private val prefs: SharedPreferences
+    private val api: AuthApiService
 ) : ViewModel() {
 
     private val _weatherData = MutableStateFlow<WeatherResponse?>(null)
@@ -25,6 +24,7 @@ class WeatherViewModel @Inject constructor(
 
     private val _weatherState = MutableStateFlow<WeatherState>(WeatherState.Idle)
     val weatherState: StateFlow<WeatherState> = _weatherState.asStateFlow()
+
 // Sealed Class for weather states
     sealed class WeatherState {
         object Idle : WeatherState()
@@ -37,7 +37,7 @@ class WeatherViewModel @Inject constructor(
         _weatherState.value = WeatherState.Loading
         viewModelScope.launch {
             try {
-                // InCase of error
+
                 Log.d("WeatherVM", "Fetching weather for state: $state")
                 val response = api.getWeatherByState(
                     WeatherByStateRequest(state),
@@ -46,23 +46,23 @@ class WeatherViewModel @Inject constructor(
                 if (response.isSuccessful) {
                     _weatherData.value = response.body()
                     _weatherState.value = WeatherState.Success
-                    // InCase of error
+
                     Log.d("WeatherVM", "Weather fetched: ${_weatherData.value}")
                 } else {
-                    // InCase of error
+
                     val error = response.errorBody()?.string() ?: "Failed to fetch weather"
                     Log.e("WeatherVM", "API error: $error")
-                    // Before update
+
                     _weatherState.value = WeatherState.Error(
-                       // response.errorBody()?.string() ?: "Failed to fetch weather"
+
                         error
                     )
                 }
             } catch (e: Exception) {
-                // InCase of error
+
                 Log.e("WeatherVM", "Network error: ${e.message}", e)
 
-                // Before update
+
                 _weatherState.value = WeatherState.Error(e.localizedMessage ?: "Network error")
             }
         }
@@ -72,10 +72,10 @@ class WeatherViewModel @Inject constructor(
         _weatherState.value = WeatherState.Loading
         viewModelScope.launch {
             try {
-                // InCase of error
+
                 Log.d("WeatherVM", "Fetching weather for coordinates: $lat, $lon")
 
-                // Before Update
+
                 val response = api.getWeatherByCoordinates(
                     WeatherByCoordinatesRequest(lat, lon),
                     "Bearer $token"

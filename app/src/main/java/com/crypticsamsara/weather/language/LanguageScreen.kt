@@ -78,7 +78,7 @@ fun LanguageScreen(
     var selectedLanguage by remember {
         mutableStateOf<AuthViewModel.NigerianLanguage?>(null)
     }
-   // val isMobile = LocalConfiguration.current.screenWidthDp < 600
+
 
     // Set initial selection after languages load
     LaunchedEffect(languages) {
@@ -99,30 +99,6 @@ fun LanguageScreen(
         }
         return
     }
-/*
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFFE3F2FD), Color(0xFFE8F5E9), Color(0xFFFFF8E1)),
-                    startY = 0f,
-                    endY = Float.POSITIVE_INFINITY
-                )
-            )
-    ) {
-
-
-        // Animated Blobs background
-    AnimatedBlobs()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-    ) {
-
- */
 
     Scaffold(
     // Top App Bar

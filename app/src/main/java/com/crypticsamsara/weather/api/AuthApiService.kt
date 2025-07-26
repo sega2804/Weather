@@ -18,13 +18,6 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface AuthApiService {
-  /*  @POST("onboarding/user/register")
-    suspend fun registerUser(@Body request: RegistrationRequest):
-            Response<RegistrationResponse>
-
-    @POST("onboarding/user/login")
-    suspend fun loginUser(@Body request: LoginRequest):
-            Response<LoginResponse> */
 
     // User Endpoints
     @POST("api/users")

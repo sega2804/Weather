@@ -34,12 +34,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             WeatherTheme {
-             /*   val viewModel: AuthViewModel = viewModel(
-                    factory = AuthViewModelFactory(retrofit)
-                )
-
-              */
-              //  WeatherApp()
                 Surface(color = MaterialTheme.colorScheme.background) {
                     AppNavigation()
                 }
@@ -48,17 +42,6 @@ class MainActivity : ComponentActivity() {
 
     }
 }
-/*
-@Composable
-fun WeatherApp() {
-    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(apiService = AuthApiClient.apiService))
-    val weatherViewModel: WeatherViewModel = viewModel(factory = AuthViewModelFactory(apiService = AuthApiClient.apiService ) )
-
-    AppNavigation(authViewModel, weatherViewModel)
-}
-
- */
-
 @Preview(showBackground = true)
 @Composable
 fun WeatherAppPreview() {

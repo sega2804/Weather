@@ -51,142 +51,6 @@ import com.crypticsamsara.weather.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-/*
-fun RegistrationScreen(viewModel: AuthViewModel,
-                       onRegisterClick: (String, String, String, String
-                               , String) -> Unit,
-                       onLoginClick: () -> Unit,
-                       navController: NavHostController
-) {
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-    var state by remember { mutableStateOf("") }
-
-    LaunchedEffect(viewModel.isRegistrationSuccessful) {
-        if (viewModel.isRegistrationSuccessful) {
-            navController.navigate("dashboard") {
-                popUpTo("register") { inclusive = true }
-            }
-        }
-    }
-
-    // Box
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF4F9FD)),
-        contentAlignment = Alignment.Center
-    ) {
-        // CardView
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-            modifier = Modifier
-                .padding(24.dp)
-                .fillMaxWidth()
-        ) {
-
-
-            Column(
-                modifier = Modifier.fillMaxSize()
-                    .padding(22.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Register", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-
-                // Spacer
-                Spacer(Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = firstName,
-                    onValueChange = { firstName = it },
-                    label = { Text("First Name") },
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                //Spacer
-                Spacer(Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = lastName,
-                    onValueChange = { lastName = it },
-                    label = { Text("Last Name") },
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth())
-
-                // Spacer
-                Spacer(Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth())
-
-
-                // Spacer
-                Spacer(Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
-                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        val icon =
-                            if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(icon, contentDescription = null)
-                        }
-                    },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                //Spacer
-                Spacer(Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = state,
-                    onValueChange = { state = it },
-                    label = { Text("State") },
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth())
-
-                // Spacer
-                Spacer(Modifier.height(16.dp))
-
-                Button(onClick = {
-                    viewModel.register(firstName, lastName, email, password, state)
-                }) {
-                    Text("Register")
-                }
-
-                viewModel.message?.let {
-                    Spacer(Modifier.height(16.dp))
-                    Text(it, color = Color.Green)
-                }
-
-                TextButton(
-                    onClick =
-                        onLoginClick) {
-                    Text("Already have an account? Login")
-                }
-
-            }
-
-        }
-    }
-}*/
 fun RegistrationScreen(
     viewModel: AuthViewModel = hiltViewModel(),
     navController: NavHostController
@@ -210,34 +74,11 @@ fun RegistrationScreen(
         }
     }
 
-  /*  Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center
-    ) {
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(8.dp),
-            modifier = Modifier
-                .padding(24.dp)
-                .fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(24.dp)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) */
-
     // InCase of error
     LaunchedEffect(firstName, lastName, email, phoneNumber, password, state) {
         isValid = firstName.isNotBlank() && lastName.isNotBlank() && email.isValidEmail() &&
                 phoneNumber.isValidPhoneNumber() && password.isValidPassword() && state.isNotBlank()
     }
-
-
 
     // Box
     Box(
@@ -248,15 +89,6 @@ fun RegistrationScreen(
     ) {
         // CardView
         Card(
-            /*
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-            modifier = Modifier
-                .padding(24.dp)
-                .fillMaxWidth()
-
-             */
-            // InCase of Error
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .padding(16.dp),
@@ -403,17 +235,7 @@ fun RegistrationScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = registrationState !is AuthState.Loading
-                            //&&
-                       /*     firstName.isNotBlank() &&
-                            lastName.isNotBlank() &&
-                            email.isValidEmail() &&
-                            phoneNumber.length == 11 &&
-                            phoneNumber.isValidPhoneNumber() &&
-                            password.length >= 8 &&
-                            password.isValidPhoneNumber() &&
-                            state.isNotBlank()
 
-                        */
                 ) {
                     if (registrationState is AuthState.Loading) {
                         CircularProgressIndicator(

@@ -49,117 +49,7 @@ import com.crypticsamsara.weather.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-/*
-fun LoginScreen(viewModel: AuthViewModel,
-                onLoginClick: (String, String, String) -> Unit,
-                onRegisterClick: () -> Unit,
-                navController: NavHostController
-) {
-    var email by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
 
-    LaunchedEffect(viewModel.isLoginSuccessful) {
-        if (viewModel.isLoginSuccessful) {
-            navController.navigate("dashboard") {
-                popUpTo("login") { inclusive = true }
-            }
-        }
-    }
-
-
-    // Box
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF4F9FD)),
-        contentAlignment = Alignment.Center
-    ) {
-        // CardView
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-            modifier = Modifier
-                .padding(24.dp)
-                .fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Text("Login", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-
-                // Spacer
-                Spacer(Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                //Spacer
-                Spacer(Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("phone number") },
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth())
-
-                // Spacer
-                Spacer(Modifier.height(8.dp))
-
-
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
-                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        val icon =
-                            if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(icon, contentDescription = null)
-                        }
-                    },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                // Spacer
-                Spacer(Modifier.height(16.dp))
-
-                Button(onClick = {
-                    viewModel.login(email, phone, password )
-                }) {
-                    Text("Login")
-                }
-
-                viewModel.message?.let {
-                    Spacer(Modifier.height(16.dp))
-                    Text(it, color = Color.Red)
-                }
-
-                TextButton(
-                    onClick =
-                        onRegisterClick) {
-                    Text("Don't have an account? SignUp")
-                }
-
-            }
-
-        }
-    }
-} */
 fun LoginScreen(
     viewModel: AuthViewModel = hiltViewModel(),
     navController: NavHostController
@@ -197,15 +87,6 @@ fun LoginScreen(
         contentAlignment = Alignment.Center
     ) {
         Card(
-          /* InCase of Error
-            modifier = Modifier.fillMaxWidth(),
-          8  shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-            modifier = Modifier
-                .padding(24.dp)
-                .fillMaxWidth()
-
-           */
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .padding(16.dp),
@@ -213,12 +94,6 @@ fun LoginScreen(
             shape = MaterialTheme.shapes.medium
         ) {
             Column(
-                /* InCase of Error
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Center
-                 */
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(24.dp),
@@ -288,14 +163,7 @@ fun LoginScreen(
                         isValid &&
 
                         loginState !is AuthState.Loading
-                            // &&
-                        /*    email.isValidEmail() &&
-                            phoneNumber.length == 11 &&
-                            phoneNumber.isValidPhoneNumber() &&
-                            password.length >= 8 &&
-                            password.isValidPhoneNumber()
 
-                         */
                 ) {
                     if (loginState is AuthState.Loading) {
                         CircularProgressIndicator(color = Color.White)

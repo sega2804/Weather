@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
@@ -38,12 +37,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.crypticsamsara.weather.viewmodel.AuthState
 import com.crypticsamsara.weather.viewmodel.AuthViewModel
@@ -163,13 +161,14 @@ fun LoginScreen(viewModel: AuthViewModel,
     }
 } */
 fun LoginScreen(
-    viewModel: AuthViewModel,
+    viewModel: AuthViewModel = hiltViewModel(),
     navController: NavHostController
 ) {
     var email by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var isValid by remember { mutableStateOf(false) }
 
     val loginState by viewModel.loginState.collectAsState()
 
@@ -185,6 +184,12 @@ fun LoginScreen(
         }
     }
 
+    // InCase of Error
+    LaunchedEffect(email, phoneNumber, password) {
+        isValid = email.isValidEmail() && phoneNumber.length == 11
+                && password.isValidPassword()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -192,46 +197,65 @@ fun LoginScreen(
         contentAlignment = Alignment.Center
     ) {
         Card(
-            shape = RoundedCornerShape(16.dp),
+          /* InCase of Error
+            modifier = Modifier.fillMaxWidth(),
+          8  shape = RoundedCornerShape(16.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
             modifier = Modifier
                 .padding(24.dp)
                 .fillMaxWidth()
+
+           */
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .padding(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            shape = MaterialTheme.shapes.medium
         ) {
             Column(
+                /* InCase of Error
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 verticalArrangement = Arrangement.Center
+                 */
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Text("Login", style = MaterialTheme.typography.headlineSmall)
+                Text("Sign In",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.Black)
 
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(24.dp))
 
                 // Email Field
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     label = { Text("Email") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     leadingIcon = { Icon(Icons.Default.Email, null) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(16.dp))
 
                 // Phone Field
                 OutlinedTextField(
                     value = phoneNumber,
                     onValueChange = { phoneNumber = it },
-                    label = { Text("Phone (optional)") },
+                    label = { Text("Phone Number (optional)") },
                     leadingIcon = { Icon(Icons.Default.Phone, null) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(16.dp))
 
                 // Password Field
                 OutlinedTextField(
@@ -260,7 +284,10 @@ fun LoginScreen(
                 Button(
                     onClick = { viewModel.login(email, phoneNumber, password) },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = loginState !is AuthState.Loading
+                    enabled = // InCase of Error
+                        isValid &&
+
+                        loginState !is AuthState.Loading
                             // &&
                         /*    email.isValidEmail() &&
                             phoneNumber.length == 11 &&
@@ -273,7 +300,7 @@ fun LoginScreen(
                     if (loginState is AuthState.Loading) {
                         CircularProgressIndicator(color = Color.White)
                     } else {
-                        Text("Login")
+                        Text("Sign In")
                     }
                 }
 
@@ -287,6 +314,17 @@ fun LoginScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
+                    // InCase of error
+                    // For Success
+                    is AuthState.Success -> {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            (loginState as AuthState.Success).message,
+                            color = Color.Black,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
 
                     else -> {}
                 }

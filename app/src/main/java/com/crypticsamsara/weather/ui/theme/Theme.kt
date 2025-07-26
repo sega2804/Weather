@@ -1,6 +1,5 @@
 package com.crypticsamsara.weather.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -9,18 +8,36 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
+   /* primary = Purple80,
     secondary = PurpleGrey80,
     tertiary = Pink80
+    */
+    primary = Color(0xFF0D47A1),
+    secondary = Color(0xFF1B5E20),
+    tertiary = Color(0xFFBF360C),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF212121),
+    surfaceVariant = Color(0xFFE3F2FD)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
+  /*  primary = Purple40,
     secondary = PurpleGrey40,
-    tertiary = Pink40
+    tertiary = Pink40,
+
+   */
+    primary = Color(0xFF0D47A1),
+    secondary = Color(0xFF1B5E20),
+    tertiary = Color(0xFFBF360C),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF212121),
+    surfaceVariant = Color(0xFFE3F2FD)
+
+
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),

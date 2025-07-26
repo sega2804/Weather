@@ -1,5 +1,6 @@
 package com.crypticsamsara.weather.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.crypticsamsara.weather.api.AuthApiService
@@ -15,7 +16,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WeatherViewModel @Inject constructor(
-    private val api: AuthApiService
+    private val api: AuthApiService,
+  //  private val prefs: SharedPreferences
 ) : ViewModel() {
 
     private val _weatherData = MutableStateFlow<WeatherResponse?>(null)
@@ -35,6 +37,8 @@ class WeatherViewModel @Inject constructor(
         _weatherState.value = WeatherState.Loading
         viewModelScope.launch {
             try {
+                // InCase of error
+                Log.d("WeatherVM", "Fetching weather for state: $state")
                 val response = api.getWeatherByState(
                     WeatherByStateRequest(state),
                     "Bearer $token"
@@ -42,12 +46,23 @@ class WeatherViewModel @Inject constructor(
                 if (response.isSuccessful) {
                     _weatherData.value = response.body()
                     _weatherState.value = WeatherState.Success
+                    // InCase of error
+                    Log.d("WeatherVM", "Weather fetched: ${_weatherData.value}")
                 } else {
+                    // InCase of error
+                    val error = response.errorBody()?.string() ?: "Failed to fetch weather"
+                    Log.e("WeatherVM", "API error: $error")
+                    // Before update
                     _weatherState.value = WeatherState.Error(
-                        response.errorBody()?.string() ?: "Failed to fetch weather"
+                       // response.errorBody()?.string() ?: "Failed to fetch weather"
+                        error
                     )
                 }
             } catch (e: Exception) {
+                // InCase of error
+                Log.e("WeatherVM", "Network error: ${e.message}", e)
+
+                // Before update
                 _weatherState.value = WeatherState.Error(e.localizedMessage ?: "Network error")
             }
         }
@@ -57,6 +72,10 @@ class WeatherViewModel @Inject constructor(
         _weatherState.value = WeatherState.Loading
         viewModelScope.launch {
             try {
+                // InCase of error
+                Log.d("WeatherVM", "Fetching weather for coordinates: $lat, $lon")
+
+                // Before Update
                 val response = api.getWeatherByCoordinates(
                     WeatherByCoordinatesRequest(lat, lon),
                     "Bearer $token"
@@ -64,12 +83,24 @@ class WeatherViewModel @Inject constructor(
                 if (response.isSuccessful) {
                     _weatherData.value = response.body()
                     _weatherState.value = WeatherState.Success
+
+                    // InCase of error
+                    Log.d("WeatherVM", "Weather fetched: ${_weatherData.value}")
+
                 } else {
+                    // InCase of error
+               val error = response.errorBody()?.string() ?: "Failed to fetch weather"
+                    Log.e("WeatherVM", "API error: $error")
+
+
                     _weatherState.value = WeatherState.Error(
                         response.errorBody()?.string() ?: "Failed to fetch weather"
                     )
                 }
             } catch (e: Exception) {
+                // InCase of error
+                Log.e("WeatherVM", "Network error: ${e.message}", e)
+
                 _weatherState.value = WeatherState.Error(e.localizedMessage ?: "Network error")
             }
         }

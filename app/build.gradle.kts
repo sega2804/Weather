@@ -56,6 +56,7 @@ dependencies {
     // implementation(libs.androidx.navigation.compose.jvmstubs)
     implementation(libs.firebase.crashlytics)
     implementation(libs.play.services.contextmanager)
+    implementation(libs.firebase.crashlytics.buildtools)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -63,9 +64,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
-    // Lifecycle components
-    //implementation(libs.androidx.lifecycle.runtime.ktx)
 
 // dependencies for Compose navigation
     implementation(libs.androidx.navigation.compose)
@@ -109,9 +107,14 @@ dependencies {
     kapt ("com.google.dagger:hilt-android-compiler:2.57")
 
     // For viewmodel injection
-    implementation ("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
+    // implementation ("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
     kapt ("androidx.hilt:hilt-compiler:1.2.0")
 
+// internal Hilt classes like DefaultActivityViewModelFactory
+    implementation("androidx.hilt:hilt-common:1.2.0")
+
+    // Hilt integration with Compose Navigation
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
 
 }

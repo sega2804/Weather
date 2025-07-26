@@ -1,29 +1,9 @@
 package com.crypticsamsara.weather.viewmodel
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.crypticsamsara.weather.api.AuthApiService
-import com.crypticsamsara.weather.loginactivities.LoginScreen
-import com.crypticsamsara.weather.registrationactivities.RegistrationScreen
-import com.crypticsamsara.weather.user.DashBoard
-import com.crypticsamsara.weather.user.Screen
-import com.google.firebase.sessions.dagger.Module
-import com.google.firebase.sessions.dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.components.SingletonComponent
-import jakarta.inject.Inject
-import jakarta.inject.Singleton
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-
-
+import com.crypticsamsara.weather.user.AppNavigation
 
 
 @Composable
@@ -64,20 +44,22 @@ fun AppEntry(){
 
 
 fun WeatherApp() {
-    val navController = rememberNavController()
-    val authViewModel: AuthViewModel = viewModel()
+   // val navController = rememberNavController()
+    val authViewModel: AuthViewModel = hiltViewModel()
     val weatherViewModel: WeatherViewModel = viewModel()
-   /* val apiService = rememberApiService()
-    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(apiService))
+    AppNavigation(authViewModel,weatherViewModel)
+}
+  //val apiService = rememberApiService()
+   // val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(apiService))
 
-    */
 
+/*
     // AppNavigation(authViewModel, weatherViewModel)
 
     // Main app navigation structure
     NavHost(
         navController = navController,
-        startDestination = "register"
+        startDestination = "language"
     ) {
         composable("login") {
             LoginScreen(
@@ -103,11 +85,25 @@ fun WeatherApp() {
 
             )
         }
+        composable ("language"){
+            LanguageScreen(
+                viewModel = authViewModel,
+                navController = navController
+            )
+        }
+
+        composable ("profile"){
+            ProfileScreen(
+                userData = authViewModel.currentUser.value,
+                onBack = { navController.popBackStack() },
+                onLogout = {}
+            )
+        }
     }
 }
 
 
-/*
+
 @Composable
 private fun rememberApiService(): AuthApiService {
     val retrofit = remember {
@@ -119,7 +115,7 @@ private fun rememberApiService(): AuthApiService {
     return remember { retrofit.create(AuthApiService::class.java) }
 }
 
- */
+
 
 
 
@@ -136,3 +132,5 @@ class AuthViewModelFactory(
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+
+ */

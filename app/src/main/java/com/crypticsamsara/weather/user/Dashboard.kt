@@ -1,66 +1,129 @@
 package com.crypticsamsara.weather.user
 
-import com.crypticsamsara.weather.viewmodel.WeatherViewModel.WeatherState
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.crypticsamsara.weather.R
 import com.crypticsamsara.weather.viewmodel.AuthViewModel
 import com.crypticsamsara.weather.viewmodel.WeatherViewModel
 import com.crypticsamsara.weather.weatheractivities.CurrentWeather
 import com.crypticsamsara.weather.weatheractivities.DailyWeather
-//import com.google.android.gms.awareness.state.Weather
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashBoard(
-    viewModel: AuthViewModel,
+    viewModel: AuthViewModel = hiltViewModel(),
     navController: NavHostController,
-    weatherViewModel: WeatherViewModel,
+    weatherViewModel: WeatherViewModel = hiltViewModel(),
     onProfileClick: () -> Unit,
     onSettingsClick: () -> Unit
 ) {
     val weatherData by weatherViewModel.weatherData.collectAsState()
     val weatherState by weatherViewModel.weatherState.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
+    val authToken by viewModel.authToken.collectAsState()
+    var retryCount by remember { mutableIntStateOf(0) }
+    val maxRetries = 3
 
-    // Fetch weather data when screen loads
-    LaunchedEffect(Unit) {
-        currentUser?.location?.state?.let { state ->
-            viewModel.authToken.value?.let { token ->
-                weatherViewModel.getWeatherByState(state, token)
+    // Fetch weather when user and token are available
+    LaunchedEffect(currentUser, authToken) {
+        val userSnapshot = currentUser
+        val tokenSnapshot = authToken
+        if (userSnapshot != null && tokenSnapshot != null) {
+            userSnapshot.location?.state?.let { state ->
+                Log.d("Dashboard", "Fetching weather for state: " +
+                        "$state at ${getCurrentTime()}"
+                )
+                weatherViewModel.getWeatherByState(state, tokenSnapshot)
             }
         }
+
+        // InCase of Error
+        while (true) {
+            kotlinx.coroutines.delay(60.minutes.inWholeMilliseconds)
+            if (userSnapshot != null && tokenSnapshot != null) {
+                userSnapshot.location?.state?.let { state ->
+                    weatherViewModel.getWeatherByState(state, tokenSnapshot)
+                }
+            }
+        }
+
     }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Weather Forecast") },
+                title = { Text("AgriCast") },
                 actions = {
                     IconButton(onClick = onProfileClick) {
                         Icon(Icons.Default.Person, contentDescription = "Profile")
+                    }
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(Icons.Default.Explore, contentDescription = "Settings")
+                    }
+                    IconButton(onClick = {
+                        viewModel.logout()
+                        navController.navigate("login") {
+                            popUpTo("dashboard") {
+                                inclusive = true
+                            }
+                        }
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.Logout, "Logout")
                     }
                 }
             )
@@ -68,11 +131,8 @@ fun DashBoard(
         bottomBar = {
             BottomNavigationBar(
                 currentRoute = Screen.DashboardScreen.route,
-                onNavigationSelected = {route ->
-                    when (route) {
-                        "profile" -> onProfileClick()
-                        "settings" -> onSettingsClick()
-                    }
+                onNavigationSelected = { route ->
+                    navController.navigate(route)
                 }
             )
         }
@@ -81,42 +141,130 @@ fun DashBoard(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
         ) {
-            when (weatherState) {
-                is WeatherState.Loading -> {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            if (currentUser == null) {
+                CircularProgressIndicator()
+                Text(
+                    "Loading user profile...",
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            } else {
+                when (weatherState) {
+                    is WeatherViewModel.WeatherState.Loading -> {
+                        CircularProgressIndicator()
+                        Text(
+                            "Loading weather data...",
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                     }
-                }
-                is WeatherState.Error -> {
-                    Text(
-                        text = (weatherState as WeatherState.Error).message,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-                else -> {
-                    weatherData?.let { weather ->
-                        // Current Weather Card
-                        WeatherCard(weather.current, weather.daily.firstOrNull())
+                    is WeatherViewModel.WeatherState.Error -> {
+                        Text(
+                            text = "Error: ${(weatherState as WeatherViewModel.WeatherState.Error).message}." +
+                                    "Retries left: ${maxRetries - retryCount} ",
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        // InCase of Error
+                        if (retryCount < maxRetries) {
+                            Button(
+                                onClick = {
+                                    val userSnapshot = currentUser
+                                    val tokenSnapshot = authToken
+                                    if (userSnapshot != null && tokenSnapshot != null) {
+                                        userSnapshot.location?.state?.let { state ->
+                                            weatherViewModel.getWeatherByState(state, tokenSnapshot)
+                                            retryCount++
+                                        }
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp)
+                            ) {
+                                Text("Retry")
+                            }
+                        }
+                    }
+                    is WeatherViewModel.WeatherState.Idle -> {
+                        Text("No weather data loaded yet", modifier = Modifier.fillMaxWidth())
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        // InCase of Error
+                        Button(
+                            onClick = {
+                                val userSnapshot = currentUser
+                                val tokenSnapshot = authToken
+                                if (userSnapshot != null && tokenSnapshot != null) {
+                                    userSnapshot.location?.state?.let { state ->
+                                        weatherViewModel.getWeatherByState(state, tokenSnapshot)
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                        ) {
+                            Text("Load Weather")
+                        }
+                    }
 
-                        // Hourly Forecast
-                        Text("Hourly Forecast", style = MaterialTheme.typography.titleMedium)
-                        HourlyForecast(weather.daily.take(24))
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                    is WeatherViewModel.WeatherState.Success -> {
+                        weatherData?.let { data ->
+                            WeatherCard(data.current, data.daily.firstOrNull(),
+                                modifier = Modifier.weight(1f))
 
-                        // Daily Forecast
-                        Text("7-Day Forecast", style = MaterialTheme.typography.titleMedium)
-                        DailyForecast(weather.daily)
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                        // Weather Alerts
-                        weather.daily.firstOrNull()?.let { today ->
-                            if (today.pop > 0.5) {
-                                WeatherAlert("Rain expected today")
+                            Text("Hourly Forecast", style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.align(Alignment.Start))
+
+                            HourlyForecast(data.daily.take(24),
+                                modifier = Modifier.weight(1f))
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text("7-Day Forecast", style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.align(Alignment.Start))
+                            DailyForecast(data.daily,
+                                modifier = Modifier.weight(1f))
+
+                            data.daily.firstOrNull()?.let { today ->
+
+                            // iNcASe of Error
+                                val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+                                if (today.pop > 0.5 && currentHour < 18) { // Rain expected before evening
+                                    WeatherAlert(
+
+                                        // Change to display alert message and not the predefined below
+                                        message = "Rain expected today before 6 PM",
+                                        modifier = Modifier.weight(0.5f)
+                                    )
+                                }
+                            }
+
+
+
+                        } ?: run {
+                            Text("No weather data available",
+                                modifier = Modifier.fillMaxWidth())
+                            Button(
+                                onClick = {
+                                    val userSnapshot = currentUser
+                                    val tokenSnapshot = authToken
+                                    if (userSnapshot != null && tokenSnapshot != null) {
+                                        userSnapshot.location?.state?.let { state ->
+                                            weatherViewModel.getWeatherByState(state, tokenSnapshot)
+                                        }
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp)
+                            ) {
+                                Text("Retry")
                             }
                         }
                     }
@@ -127,10 +275,11 @@ fun DashBoard(
 }
 
 @Composable
-fun WeatherCard(current: CurrentWeather, today: DailyWeather?) {
+fun WeatherCard(current: CurrentWeather, today: DailyWeather?,
+                modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        modifier = modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
@@ -140,7 +289,8 @@ fun WeatherCard(current: CurrentWeather, today: DailyWeather?) {
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
                     Text(
@@ -152,32 +302,29 @@ fun WeatherCard(current: CurrentWeather, today: DailyWeather?) {
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
-
                 Image(
                     painter = painterResource(id = getWeatherIcon(current.weather.firstOrNull()?.icon)),
                     contentDescription = "Weather icon",
                     modifier = Modifier.size(64.dp)
                 )
             }
-
             Spacer(modifier = Modifier.height(16.dp))
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 WeatherDetail("🌬️", "${current.windSpeed} km/h", "Wind")
                 WeatherDetail("💧", "${current.humidity}%", "Humidity")
-                WeatherDetail("☔", "${today?.pop?.times(100)?.toInt()}%", "Rain")
+                WeatherDetail("☔", "${today?.pop?.times(100)?.toInt() ?: 0}%", "Rain")
             }
         }
     }
 }
 
 @Composable
-fun HourlyForecast(hourly: List<DailyWeather>) {
+fun HourlyForecast(hourly: List<DailyWeather>, modifier: Modifier = Modifier) {
     LazyRow(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(hourly) { hour ->
@@ -207,8 +354,9 @@ fun HourlyForecastItem(hour: DailyWeather) {
 }
 
 @Composable
-fun DailyForecast(daily: List<DailyWeather>) {
-    Column {
+fun DailyForecast(daily: List<DailyWeather>,
+                  modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
         daily.forEach { day ->
             DailyForecastItem(day)
         }
@@ -225,7 +373,6 @@ fun DailyForecastItem(day: DailyWeather) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(text = formatDate(day.dt), style = MaterialTheme.typography.bodyMedium)
-
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
                 painter = painterResource(id = getWeatherIcon(day.weather.firstOrNull()?.icon)),
@@ -242,9 +389,10 @@ fun DailyForecastItem(day: DailyWeather) {
 }
 
 @Composable
-fun WeatherAlert(message: String) {
+fun WeatherAlert(message: String,
+                 modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(top = 16.dp),
         colors = CardDefaults.cardColors(
@@ -291,15 +439,17 @@ fun getWeatherIcon(iconCode: String?): Int {
 }
 
 fun formatTime(timestamp: Long): String {
-    // Implement time formatting
-    return "12 PM"
+    return SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(timestamp * 1000))
 }
 
 fun formatDate(timestamp: Long): String {
-    // Implement date formatting
-    return "Mon"
+    return SimpleDateFormat("EEE", Locale.getDefault()).format(Date(timestamp * 1000))
 }
 
+fun getCurrentTime(): String {
+    val sdf = SimpleDateFormat("h: mm a", Locale.getDefault())
+    return sdf.format(Calendar.getInstance().time)
+}
 
 @Composable
 fun BottomNavigationBar(
@@ -307,26 +457,10 @@ fun BottomNavigationBar(
     onNavigationSelected: (String) -> Unit
 ) {
     val items = listOf(
-        BottomNavItem(
-            route = "home",
-            icon = Icons.Default.Home,
-            label = "Home"
-        ),
-        BottomNavItem(
-            route = "forecast",
-            icon = Icons.Default.Explore,
-            label = "Forecast"
-        ),
-        BottomNavItem(
-            route = "alerts",
-            icon = Icons.Default.Notifications,
-            label = "Alerts"
-        ),
-        BottomNavItem(
-            route = "profile",
-            icon = Icons.Default.Person,
-            label = "Profile"
-        )
+        BottomNavItem("home", Icons.Default.Home, "Home"),
+        BottomNavItem("forecast", Icons.Default.Explore, "Forecast"),
+        BottomNavItem("alerts", Icons.Default.Notifications, "Alerts"),
+        BottomNavItem("profile", Icons.Default.Person, "Profile")
     )
 
     NavigationBar {
@@ -346,4 +480,3 @@ data class BottomNavItem(
     val icon: ImageVector,
     val label: String
 )
-
